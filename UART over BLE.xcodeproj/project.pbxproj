@@ -6,8 +6,16 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		392E6EC530050AF300799A6C /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 392E6EC430050AF300799A6C /* ContentView.swift */; };
+		39CA7265300A160600BB3F4B /* BluetoothManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39716520300617170083C1A4 /* BluetoothManager.swift */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXFileReference section */
 		392E6EBF30050AF300799A6C /* UART over BLE.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "UART over BLE.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		392E6EC430050AF300799A6C /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		39716520300617170083C1A4 /* BluetoothManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BluetoothManager.swift; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.swift; };
+		39F256BE30067982004BD621 /* BluetoothViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BluetoothViewModel.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -32,6 +40,10 @@
 		392E6EB630050AF300799A6C = {
 			isa = PBXGroup;
 			children = (
+				392E6ECD3005100200799A6C /* Models */,
+				392E6ECF3005104200799A6C /* ViewModels */,
+				392E6ED03005105200799A6C /* Views */,
+				392E6ED13005105B00799A6C /* Bluetooth */,
 				392E6EC130050AF300799A6C /* UART over BLE */,
 				392E6EC030050AF300799A6C /* Products */,
 			);
@@ -43,6 +55,37 @@
 				392E6EBF30050AF300799A6C /* UART over BLE.app */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		392E6ECD3005100200799A6C /* Models */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		392E6ECF3005104200799A6C /* ViewModels */ = {
+			isa = PBXGroup;
+			children = (
+				39F256BE30067982004BD621 /* BluetoothViewModel.swift */,
+			);
+			path = ViewModels;
+			sourceTree = "<group>";
+		};
+		392E6ED03005105200799A6C /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				392E6EC430050AF300799A6C /* ContentView.swift */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		392E6ED13005105B00799A6C /* Bluetooth */ = {
+			isa = PBXGroup;
+			children = (
+				39716520300617170083C1A4 /* BluetoothManager.swift */,
+			);
+			path = Bluetooth;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -119,6 +162,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				392E6EC530050AF300799A6C /* ContentView.swift in Sources */,
+				39CA7265300A160600BB3F4B /* BluetoothManager.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
