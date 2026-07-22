@@ -22,7 +22,8 @@ final class BluetoothManager: NSObject,
     private var txCharacteristic: CBCharacteristic?
     private var rxCharacteristic: CBCharacteristic?
     private let uartServiceUUID = CBUUID(string: "FFE0") //degisememeleri gerektiginden let
-    private let uartCharacteristicUUID = CBUUID(string: "FFE1")
+    private let uartCharacteristicUUID = CBUUID(string: "FFE1") //baglandiktan sonra dogru haberlesme kanalini secmek
+    
     
     override init() {
         super.init()
@@ -34,25 +35,32 @@ final class BluetoothManager: NSObject,
     
     //bluetooth durumunun kontrol eder ve uygulamayi gunceller
     func centralManagerDidUpdateState(_ central: CBCentralManager) {
+        
         switch central.state {
         case .poweredOn:
-            isBluetoothReady = true //isbluetoothready sadece true false tutar
-            statusMessage = "Bluetooth hazır" //statusmassage metni tutar
+            isBluetoothReady = true
+            statusMessage = "Bluetooth hazır"
+            
         case .poweredOff:
             isBluetoothReady = false
             statusMessage = "Bluetooth kapalı"
+            
         case .unauthorized:
             isBluetoothReady = false
             statusMessage = "Bluetooth izni yok"
+            
         case .unsupported:
             isBluetoothReady = false
             statusMessage = "Bu cihaz Bluetooth'u desteklemiyor"
+            
         case .resetting:
             isBluetoothReady = false
             statusMessage = "Bluetooth yeniden başlatılıyor"
+            
         case .unknown:
             isBluetoothReady = false
             statusMessage = "Bluetooth durumu bilinmiyor"
+            
         @unknown default:
             isBluetoothReady = false
             statusMessage = "Bluetooth durumu bilinmiyor"
@@ -85,6 +93,10 @@ final class BluetoothManager: NSObject,
             return
         }
         
+        guard deviceName.contains("INDOR") else { //cihaz adinda INDOR geciyor mu
+            return
+        }
+                
         let alreadyExists = // bulunan cihaz listede var mi kontrol et
         discoveredPeripherals // daha once bulunan BLE cihazlarinin listesi
             .contains { device in // listedeki her cihaz icin kontrol yap
@@ -100,17 +112,51 @@ final class BluetoothManager: NSObject,
     
     //secilen cihaza baglanti istegi gonderir
     func connect(to peripheral: CBPeripheral) {
-        centralManager?.connect(peripheral)
+        
+        
+        
+        print("Bağlanma isteği gönderildi: \(peripheral.name ?? "Unknown")")//sonradan ekledim
+        
+        
+        
+        centralManager?.connect(peripheral, options: nil)
     }
     
-    //baglanti kuruldugunda ihazin servislerini kesfetmeye baslar
+    //baglanti kuruldugunda cihazin servislerini kesfetmeye baslar
     func centralManager(
         _ central: CBCentralManager,
         didConnect peripheral: CBPeripheral
     ) {
+        
         discoveredPeripheral = peripheral
         peripheral.delegate = self // callbackler bluetoothmanagera gelsin
         peripheral.discoverServices(nil) // hm10un butun servislerini istemek
+    }
+    
+    //baglanti basarisizsa cagiirlir
+    func centralManager(
+        _ central: CBCentralManager,
+        didFailToConnect peripheral: CBPeripheral,
+        error: Error?
+    ) {
+        print("Bağlanılamadı")
+
+        if let error {
+            print(error.localizedDescription)
+        }
+    }
+    
+    //baglanti kesilirse cagirilir
+    func centralManager(
+        _ central: CBCentralManager,
+        didDisconnectPeripheral peripheral: CBPeripheral,
+        error: Error?
+    ) {
+        print("Bağlantı kesildi")
+
+        if let error {
+            print(error.localizedDescription)
+        }
     }
     
     //bagli cihazin servislerini kontrol eder ve uart servisi bulursa characteristic kesfini baslatir
@@ -237,4 +283,5 @@ final class BluetoothManager: NSObject,
         }
         print("Veri başarıyla gönderildi.")
     }
+    
 }
