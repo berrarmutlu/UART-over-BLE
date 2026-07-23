@@ -12,15 +12,18 @@ final class BluetoothManager: NSObject,
                               ObservableObject,
                               CBCentralManagerDelegate,
                               CBPeripheralDelegate {
+    //view un takip edecegi state bilgileri
     @Published private(set) var isBluetoothReady = false
     @Published private(set) var statusMessage = "Bluetooth hazırlanıyor"
+    @Published private(set) var isConnected = false
+    @Published private(set) var receivedMessage = ""
     
     private var centralManager: CBCentralManager?
     @Published private(set) var discoveredPeripherals: [CBPeripheral] = [] //bulunan cihazlar listeye eklenir
-    private var discoveredPeripheral: CBPeripheral?
+    private var connectedPeripheral: CBPeripheral?
     
-    private var txCharacteristic: CBCharacteristic?
-    private var rxCharacteristic: CBCharacteristic?
+    private var txCharacteristic: CBCharacteristic? //UART TX -> BLE Write
+    private var rxCharacteristic: CBCharacteristic? //UART RX -> BLE Notify
     private let uartServiceUUID = CBUUID(string: "FFE0") //degisememeleri gerektiginden let
     private let uartCharacteristicUUID = CBUUID(string: "FFE1") //baglandiktan sonra dogru haberlesme kanalini secmek
     
@@ -82,6 +85,11 @@ final class BluetoothManager: NSObject,
         )
     }
     
+    private func stopScan() {
+        centralManager?.stopScan()
+        print("Tarama durduruldu.") //consol ciktisi
+    }
+    
     //cihaz adi al kaydet
     func centralManager(
         _ central: CBCentralManager,
@@ -105,21 +113,21 @@ final class BluetoothManager: NSObject,
         
         if !alreadyExists { //eger bu cihaz daha once listede yoksa listeye ekle, ! not operatoru degeri tersine cevirir
             discoveredPeripherals.append(peripheral)
+            print("Bulunan cihaz: \(deviceName)")
         }
-        
-        print("Bulunan cihaz: \(deviceName)")
     }
     
     //secilen cihaza baglanti istegi gonderir
     func connect(to peripheral: CBPeripheral) {
-        
-        
-        
-        print("Bağlanma isteği gönderildi: \(peripheral.name ?? "Unknown")")//sonradan ekledim
-        
-        
-        
         centralManager?.connect(peripheral, options: nil)
+    }
+    
+    //secilen cihaza baglanti kesme istegi gonderir
+    func disconnect() {
+        guard let connectedPeripheral else {
+            return
+        }
+        centralManager?.cancelPeripheralConnection(connectedPeripheral)
     }
     
     //baglanti kuruldugunda cihazin servislerini kesfetmeye baslar
@@ -128,12 +136,15 @@ final class BluetoothManager: NSObject,
         didConnect peripheral: CBPeripheral
     ) {
         
-        discoveredPeripheral = peripheral
+        stopScan() //didConnect icinde cunku baglanti kurulduktan sonra scan dursun istiyoruz
+        
+        connectedPeripheral = peripheral
+        isConnected = true
         peripheral.delegate = self // callbackler bluetoothmanagera gelsin
         peripheral.discoverServices(nil) // hm10un butun servislerini istemek
     }
     
-    //baglanti basarisizsa cagiirlir
+    //baglanti basarisizsa cagirilir
     func centralManager(
         _ central: CBCentralManager,
         didFailToConnect peripheral: CBPeripheral,
@@ -153,6 +164,10 @@ final class BluetoothManager: NSObject,
         error: Error?
     ) {
         print("Bağlantı kesildi")
+        connectedPeripheral = nil
+        txCharacteristic = nil //baglanti kesildiginde gecerli olamazlar
+        rxCharacteristic = nil
+        isConnected = false
 
         if let error {
             print(error.localizedDescription)
@@ -226,7 +241,8 @@ final class BluetoothManager: NSObject,
         guard let message = String(data: data, encoding: .utf8) else {
             return
         }
-        print("Gelen veri: \(message)")
+        print("Gelen veri: \(message)") //Xcode consol ciktisi
+        receivedMessage = message
     }
     
     //notify ozelliginin acilip acilmadigini kontrol eder
@@ -258,10 +274,10 @@ final class BluetoothManager: NSObject,
         guard let txCharacteristic else {
             return
         }
-        guard let discoveredPeripheral else { //elimizde bagli oldugumuz bir peripheral olmali
+        guard let connectedPeripheral else { //elimizde bagli oldugumuz bir peripheral olmali
             return
         }
-        discoveredPeripheral.writeValue(
+        connectedPeripheral.writeValue(
             data,
             for: txCharacteristic, //verinin yazilacagi characteristic
             type: .withResponse //yazma islemi tammalandiginda apple callback gonderir
