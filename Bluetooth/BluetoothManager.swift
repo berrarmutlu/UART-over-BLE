@@ -8,6 +8,35 @@
 import Combine
 import CoreBluetooth
 
+enum Command { //komut(lar)
+    case temperature
+    case humidity
+    
+    var value: String {
+        switch self {
+            
+        case .temperature: //sicaklik
+            return "?T"
+            
+        case .humidity: //nem
+            return "?H"
+        }
+    }
+    
+    //girilen mesajin tanimli bir komut olup olmadigini kontrol eder
+    static func from(_ message: String) -> Command? {
+        switch message {
+        case Command.temperature.value:
+            return .temperature
+        case Command.humidity.value:
+            return .humidity
+            
+        default:
+            return nil
+        }
+    }
+}
+
 final class BluetoothManager: NSObject,
                               ObservableObject,
                               CBCentralManagerDelegate,
@@ -17,10 +46,15 @@ final class BluetoothManager: NSObject,
     @Published private(set) var statusMessage = "Bluetooth hazırlanıyor"
     @Published private(set) var isConnected = false
     @Published private(set) var receivedMessage = ""
+    @Published private(set) var humidity: Double?
+    @Published private(set) var temperature: Double?
+    @Published private(set) var commandStatus = ""
     
     private var centralManager: CBCentralManager?
     @Published private(set) var discoveredPeripherals: [CBPeripheral] = [] //bulunan cihazlar listeye eklenir
     private var connectedPeripheral: CBPeripheral?
+    
+    private var pendingCommand: Command? //su anda hangi komutun cevabini bekliyorum
     
     private var txCharacteristic: CBCharacteristic? //UART TX -> BLE Write
     private var rxCharacteristic: CBCharacteristic? //UART RX -> BLE Notify
@@ -104,7 +138,7 @@ final class BluetoothManager: NSObject,
         guard deviceName.contains("INDOR") else { //cihaz adinda INDOR geciyor mu
             return
         }
-                
+        
         let alreadyExists = // bulunan cihaz listede var mi kontrol et
         discoveredPeripherals // daha once bulunan BLE cihazlarinin listesi
             .contains { device in // listedeki her cihaz icin kontrol yap
@@ -151,7 +185,7 @@ final class BluetoothManager: NSObject,
         error: Error?
     ) {
         print("Bağlanılamadı")
-
+        
         if let error {
             print(error.localizedDescription)
         }
@@ -167,8 +201,9 @@ final class BluetoothManager: NSObject,
         connectedPeripheral = nil
         txCharacteristic = nil //baglanti kesildiginde gecerli olamazlar
         rxCharacteristic = nil
+        pendingCommand = nil
         isConnected = false
-
+        
         if let error {
             print(error.localizedDescription)
         }
@@ -194,7 +229,7 @@ final class BluetoothManager: NSObject,
         }
     }
     
-    //notify ile gelen veriyi alir ve datadan stringe donusturur
+    //servis icindeki characteristicleri kontrol eder ve UART characteristicini hazirlar
     func peripheral(
         _ peripheral: CBPeripheral,
         didDiscoverCharacteristicsFor service: CBService,
@@ -241,8 +276,33 @@ final class BluetoothManager: NSObject,
         guard let message = String(data: data, encoding: .utf8) else {
             return
         }
-        print("Gelen veri: \(message)") //Xcode consol ciktisi
+        
+        print("Gelen veri: \(message)")
         receivedMessage = message
+        
+        let cleanMessage = message.trimmingCharacters(in: .whitespacesAndNewlines) //gelen stringi temizleme
+
+        guard let value = Double(cleanMessage) else { //temizlenen mesaj sayiya cevrilebiliyorsa value icine alir
+            print("Double'a çevrilemedi: \(cleanMessage)")
+            return
+        }
+        
+        switch pendingCommand { //gelen degeri cevabi beklenen komuta gore isler
+        case .temperature:
+            temperature = value
+            commandStatus = "Cevap alındı"
+            print("Sıcaklık güncellendi: \(value)")
+            
+        case .humidity:
+            humidity = value
+            commandStatus = "Cevap alındı"
+            print("Nem güncellendi: \(value)")
+            
+        case nil:
+            print("Beklenen bir komut cevabı yok.")
+        }
+        
+        pendingCommand = nil //cevap islenir, bekleyen komut yok
     }
     
     //notify ozelliginin acilip acilmadigini kontrol eder
@@ -265,39 +325,34 @@ final class BluetoothManager: NSObject,
         }
     }
     
-    // CoreBluetooth yalnizca Data (byte dizisi) gönderebildigi icin
-    // Stringi UTF-8 kullanarak Datya donusturuyoruz
+
+    //String komutu BLE üzerinden gönderir
     func send(message: String) {
+        //girilen mesaj tanimli bir komutsa command icine alir
+        guard let command = Command.from(message) else {
+            commandStatus = "Geçersiz komut"
+            print("Geçersiz komut: \(message)")
+            return
+        }
+        //String veriyi BLE'nin gönderebileceği Data tipine cevirir
         guard let data = message.data(using: .utf8) else {
             return
         }
         guard let txCharacteristic else {
             return
         }
-        guard let connectedPeripheral else { //elimizde bagli oldugumuz bir peripheral olmali
+        guard let connectedPeripheral else {
             return
         }
+        //hangi komutun cevabini bekledigimizi saklar
+        pendingCommand = command
+        commandStatus = "Cevap bekleniyor..."
+
         connectedPeripheral.writeValue(
             data,
-            for: txCharacteristic, //verinin yazilacagi characteristic
-            type: .withResponse //yazma islemi tammalandiginda apple callback gonderir
+            for: txCharacteristic,
+            type: .withoutResponse
         )
-    }
-    
-    //gonderilen verinin basariyla yazilip yazilmadigini kontrol eder
-    func peripheral(
-        _ peripheral: CBPeripheral,
-        didWriteValueFor characteristic: CBCharacteristic,
-        error: Error?
-    ) {
-        if let error = error {
-            print("Veri gönderilemedi: \(error.localizedDescription)")
-            return
-        }
-        guard characteristic.uuid == uartCharacteristicUUID else {
-            return
-        }
-        print("Veri başarıyla gönderildi.")
     }
     
 }

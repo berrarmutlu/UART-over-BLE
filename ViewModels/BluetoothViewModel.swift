@@ -1,5 +1,6 @@
-// views ve bluetoothmanager arasi kopru gibi
-
+// Şu an BluetoothManager ObservableObject olduğu için
+// test uygulamasında ViewModel görevini de üstlenmektedir.
+// İleride gerçek MVVM yapısına ayrılacaktır.
 
 import Combine
 
