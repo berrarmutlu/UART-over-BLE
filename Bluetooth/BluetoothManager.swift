@@ -45,7 +45,7 @@ final class BluetoothManager: NSObject,
     @Published private(set) var isBluetoothReady = false
     @Published private(set) var statusMessage = "Bluetooth hazırlanıyor"
     @Published private(set) var isConnected = false
-    @Published private(set) var receivedMessage = ""
+    @Published private(set) var receivedMessage = "" //kontrol amacli
     @Published private(set) var humidity: Double?
     @Published private(set) var temperature: Double?
     @Published private(set) var commandStatus = ""
@@ -109,6 +109,8 @@ final class BluetoothManager: NSObject,
         guard isBluetoothReady else { //bluetooth hazir mi degil mi
             return
         }
+        
+        statusMessage = "Taranıyor..."
         startScan()
     }
     
@@ -153,6 +155,7 @@ final class BluetoothManager: NSObject,
     
     //secilen cihaza baglanti istegi gonderir
     func connect(to peripheral: CBPeripheral) {
+        statusMessage = "Bağlanıyor..."
         centralManager?.connect(peripheral, options: nil)
     }
     
@@ -174,6 +177,7 @@ final class BluetoothManager: NSObject,
         
         connectedPeripheral = peripheral
         isConnected = true
+        statusMessage = "Bağlandı"
         peripheral.delegate = self // callbackler bluetoothmanagera gelsin
         peripheral.discoverServices(nil) // hm10un butun servislerini istemek
     }
@@ -184,6 +188,7 @@ final class BluetoothManager: NSObject,
         didFailToConnect peripheral: CBPeripheral,
         error: Error?
     ) {
+        statusMessage = "Bağlantı başarısız"
         print("Bağlanılamadı")
         
         if let error {
@@ -197,6 +202,7 @@ final class BluetoothManager: NSObject,
         didDisconnectPeripheral peripheral: CBPeripheral,
         error: Error?
     ) {
+        statusMessage = "Bağlantı kesildi"
         print("Bağlantı kesildi")
         connectedPeripheral = nil
         txCharacteristic = nil //baglanti kesildiginde gecerli olamazlar
@@ -278,7 +284,7 @@ final class BluetoothManager: NSObject,
         }
         
         print("Gelen veri: \(message)")
-        receivedMessage = message
+        receivedMessage = message //kontrol amacli
         
         let cleanMessage = message.trimmingCharacters(in: .whitespacesAndNewlines) //gelen stringi temizleme
 

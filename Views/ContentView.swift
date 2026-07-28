@@ -21,55 +21,79 @@ struct ContentView: View {
                 .font(.title2) // yaziyi buyutme
                 .fontWeight(.semibold) // yaziyi kalinlastir
             
-            Text(bluetoothManager.statusMessage) //bluetooth durumunu ekrana yazdirir
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
+            Text(bluetoothManager.statusMessage) //bluetooth durumu
             
-            
-            Button("Scan Devices") {
-                bluetoothManager.scan()
-            }
-            .buttonStyle(.borderedProminent) //butonun gorunusu
-            
-            if bluetoothManager.discoveredPeripherals.isEmpty {
-                Text("Henüz cihaz bulunamadı.")
-                    .foregroundStyle(.secondary)
-            } else {
-                List {
-                    ForEach(bluetoothManager.discoveredPeripherals, id: \.identifier) { peripheral in
-                        
-                        Button {
-                            bluetoothManager.connect(to: peripheral)
+            if !bluetoothManager.isConnected {
+                Button("Scan Devices") {
+                    bluetoothManager.scan()
+                }
+                .buttonStyle(.borderedProminent) //butonun gorunusu
+                
+                if bluetoothManager.discoveredPeripherals.isEmpty {
+                    Text("Henüz cihaz bulunamadı.")
+                        .foregroundStyle(.secondary)
+                } else {
+                    List {
+                        ForEach(bluetoothManager.discoveredPeripherals, id: \.identifier) { peripheral in
                             
-                        } label: {
-                            Text(peripheral.name ?? "Unknown Device")
+                            Button {
+                                bluetoothManager.connect(to: peripheral)
+                                
+                            } label: {
+                                Text(peripheral.name ?? "Unknown Device")
+                            }
                         }
                     }
+                    .frame(height: 250)
                 }
-                .frame(height: 250)
             }
             
             if bluetoothManager.isConnected {
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("Temperature") //sicaklik verisi
-                        .font(.headline)
-                    if let temperature = bluetoothManager.temperature {
-                        Text("\(temperature, specifier: "%.1f") °C") //__,_ seklindeki gosterim
-                            .font(.system(size: 32, weight: .bold))
-                    } else {
-                        Text("-- °C") //veri yoksa bos gorunum
-                            .font(.system(size: 32, weight: .bold))
-                            .frame(maxWidth: .infinity, alignment: .leading) //yan yana, sola yatik
+                
+                HStack(spacing: 12) { //temperature ve humidity ekranda yan yana dizilir
+                    
+                    //temperature sicaklik
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Temperature")
+                            .font(.headline)
+                        if let temperature = bluetoothManager.temperature {
+                            Text("\(temperature, specifier: "%.1f") °C") //__,_ seklindeki gosterim
+                                .font(.system(size: 32, weight: .bold))
+                        } else {
+                            Text("-- °C") //veri yoksa bos gorunum
+                                .font(.system(size: 32, weight: .bold))
+                                .frame(maxWidth: .infinity, alignment: .leading) //yan yana, sola yatik
+                        }
                     }
+                    
+                    .frame(maxWidth: .infinity)
+                    .padding()
+                    .background(Color(.systemGray6))
+                    .cornerRadius(12)
+                    
+                    //humidity nem
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Humidity")
+                            .font(.headline)
+                        
+                        if let humidity = bluetoothManager.humidity {
+                            Text("\(humidity, specifier: "%.1f") %")
+                                .font(.system(size: 32, weight: .bold))
+                        } else {
+                            Text("-- %")
+                                .font(.system(size: 32, weight: .bold))
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                        }
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding()
+                    .background(Color(.systemGray6))
+                    .cornerRadius(12)
                 }
                 
-                .frame(maxWidth: .infinity)
-                .padding()
-                .background(Color(.systemGray6))
-                .cornerRadius(12)
-                
-                HStack { //sola yatik yan yana
-                    TextField("Mesaj giriniz", text: $message)
+                //mesaj alani
+                HStack { //komut girisi ve gonderme butonunu yan yana gosterir
+                    TextField("Enter command (?T, ?H)", text: $message)
                         .textFieldStyle(.roundedBorder)
                     
                     Button("Send") {
@@ -85,14 +109,16 @@ struct ContentView: View {
                         .foregroundStyle(.secondary)
                 }
                 
-                Text("Received Data")
-                    .font(.headline)
-                Text(bluetoothManager.receivedMessage)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding()
-                    .background(Color(.systemGray6))
-                    .cornerRadius(12)
+                //ui kontrolu amacli
+//                Text("Received Data")
+//                    .font(.headline)
+//                Text(bluetoothManager.receivedMessage)
+//                    .frame(maxWidth: .infinity, alignment: .leading)
+//                    .padding()
+//                    .background(Color(.systemGray6))
+//                    .cornerRadius(12)
             }
+            
             
             Spacer() // bos alan
         }
