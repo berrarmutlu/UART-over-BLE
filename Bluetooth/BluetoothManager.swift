@@ -11,6 +11,7 @@ import CoreBluetooth
 enum Command { //komut(lar)
     case temperature
     case humidity
+    case level
     
     var value: String {
         switch self {
@@ -20,6 +21,9 @@ enum Command { //komut(lar)
             
         case .humidity: //nem
             return "?H"
+            
+        case .level: //kademe
+            return "?L"
         }
     }
     
@@ -30,6 +34,9 @@ enum Command { //komut(lar)
             return .temperature
         case Command.humidity.value:
             return .humidity
+        case Command.level.value:
+            return .level
+
             
         default:
             return nil
@@ -48,6 +55,7 @@ final class BluetoothManager: NSObject,
     @Published private(set) var receivedMessage = "" //kontrol amacli
     @Published private(set) var humidity: Double?
     @Published private(set) var temperature: Double?
+    @Published private(set) var level: Double?
     @Published private(set) var commandStatus = ""
     
     private var centralManager: CBCentralManager?
@@ -287,9 +295,33 @@ final class BluetoothManager: NSObject,
         receivedMessage = message //kontrol amacli
         
         let cleanMessage = message.trimmingCharacters(in: .whitespacesAndNewlines) //gelen stringi temizleme
-
-        guard let value = Double(cleanMessage) else { //temizlenen mesaj sayiya cevrilebiliyorsa value icine alir
-            print("Double'a çevrilemedi: \(cleanMessage)")
+        let parts = cleanMessage.split(separator: "_") //mesaji parcalara ayirir (komut_deger)
+        guard parts.count == 2 else { //iki parca mi kontrolu
+            print("Geçersiz cevap formatı: \(cleanMessage)")
+            return
+        }
+        let responseCommand = String(parts[0])
+        let responseValue = String(parts[1])
+        
+        print("Cevap komutu: \(responseCommand)")
+        print("Cevap değeri: \(responseValue)")
+        
+        //komut cevabi bekleniyor mu
+        guard let pendingCommand else {
+            print("Beklenen bir komut cevabı yok.")
+            return
+        }
+        
+        //gelen cevap gonderilen komuta ait mi
+        guard responseCommand == pendingCommand.value else {
+            print("Beklenmeyen cevap: \(responseCommand)")
+            print("Beklenen cevap: \(pendingCommand.value)")
+            return
+        }
+        
+        //cevaptaki deger sayiya cevrilebiliyor mu
+        guard let value = Double(responseValue) else {
+            print("Değer Double'a çevrilemedi: \(responseValue)")
             return
         }
         
@@ -304,11 +336,12 @@ final class BluetoothManager: NSObject,
             commandStatus = "Cevap alındı"
             print("Nem güncellendi: \(value)")
             
-        case nil:
-            print("Beklenen bir komut cevabı yok.")
+        case .level:
+            level = value
+            commandStatus = "Cevap alındı"
+            print("Kademe güncellendi: \(value)")
         }
-        
-        pendingCommand = nil //cevap islenir, bekleyen komut yok
+        self.pendingCommand = nil
     }
     
     //notify ozelliginin acilip acilmadigini kontrol eder
@@ -331,7 +364,7 @@ final class BluetoothManager: NSObject,
         }
     }
     
-
+    
     //String komutu BLE üzerinden gönderir
     func send(message: String) {
         //girilen mesaj tanimli bir komutsa command icine alir
@@ -353,7 +386,7 @@ final class BluetoothManager: NSObject,
         //hangi komutun cevabini bekledigimizi saklar
         pendingCommand = command
         commandStatus = "Cevap bekleniyor..."
-
+        
         connectedPeripheral.writeValue(
             data,
             for: txCharacteristic,

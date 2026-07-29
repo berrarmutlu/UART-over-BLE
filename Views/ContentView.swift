@@ -91,9 +91,29 @@ struct ContentView: View {
                     .cornerRadius(12)
                 }
                 
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Level")
+                        .font(.headline)
+                    
+                    if let level = bluetoothManager.level {
+                        Text("\(level, specifier: "%.0f")")
+                            .font(.system(size: 32, weight: .bold))
+                    } else {
+                        Text("--")
+                            .font(.system(size: 32, weight: .bold))
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                    }
+                }
+                .frame(maxWidth: .infinity)
+                .padding()
+                .background(Color(.systemGray6))
+                .cornerRadius(12)
+                
+                
+                
                 //mesaj alani
                 HStack { //komut girisi ve gonderme butonunu yan yana gosterir
-                    TextField("Enter command (?T, ?H)", text: $message)
+                    TextField("Enter command (?T, ?H, ?L)", text: $message)
                         .textFieldStyle(.roundedBorder)
                     
                     Button("Send") {
