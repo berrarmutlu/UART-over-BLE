@@ -8,41 +8,13 @@
 import Combine
 import CoreBluetooth
 
-enum Command { //komut(lar)
-    case temperature
-    case humidity
-    case level
+enum Command: String { //komut(lar)
+    case temperature = "?T"
+    case humidity = "?H"
+    case level = "?L"
+    case dateTime = "?D"
     
-    var value: String {
-        switch self {
-            
-        case .temperature: //sicaklik
-            return "?T"
-            
-        case .humidity: //nem
-            return "?H"
-            
-        case .level: //kademe
-            return "?L"
-        }
     }
-    
-    //girilen mesajin tanimli bir komut olup olmadigini kontrol eder
-    static func from(_ message: String) -> Command? {
-        switch message {
-        case Command.temperature.value:
-            return .temperature
-        case Command.humidity.value:
-            return .humidity
-        case Command.level.value:
-            return .level
-
-            
-        default:
-            return nil
-        }
-    }
-}
 
 final class BluetoothManager: NSObject,
                               ObservableObject,
@@ -56,6 +28,7 @@ final class BluetoothManager: NSObject,
     @Published private(set) var humidity: Double?
     @Published private(set) var temperature: Double?
     @Published private(set) var level: Double?
+    @Published private(set) var dateTime: String?
     @Published private(set) var commandStatus = ""
     
     private var centralManager: CBCentralManager?
@@ -117,8 +90,8 @@ final class BluetoothManager: NSObject,
         guard isBluetoothReady else { //bluetooth hazir mi degil mi
             return
         }
-        
         statusMessage = "Taranıyor..."
+        discoveredPeripherals = [] //eski liste temizlenir
         startScan()
     }
     
@@ -313,33 +286,44 @@ final class BluetoothManager: NSObject,
         }
         
         //gelen cevap gonderilen komuta ait mi
-        guard responseCommand == pendingCommand.value else {
+        guard responseCommand == pendingCommand.rawValue else {
             print("Beklenmeyen cevap: \(responseCommand)")
-            print("Beklenen cevap: \(pendingCommand.value)")
-            return
-        }
-        
-        //cevaptaki deger sayiya cevrilebiliyor mu
-        guard let value = Double(responseValue) else {
-            print("Değer Double'a çevrilemedi: \(responseValue)")
+            print("Beklenen cevap: \(pendingCommand.rawValue)")
             return
         }
         
         switch pendingCommand { //gelen degeri cevabi beklenen komuta gore isler
         case .temperature:
+            guard let value = Double(responseValue) else { //sicakalik verisi kendi icinde double cevrilir
+                print("Sıcaklık değeri sayıya çevrilemedi: \(responseValue)")
+                return
+            }
             temperature = value
             commandStatus = "Cevap alındı"
             print("Sıcaklık güncellendi: \(value)")
             
         case .humidity:
+            guard let value = Double(responseValue) else { //nem verisi kendi icinde double cevrilir
+                print("Nem değeri sayıya çevrilemedi: \(responseValue)")
+                return
+            }
             humidity = value
             commandStatus = "Cevap alındı"
             print("Nem güncellendi: \(value)")
             
         case .level:
+            guard let value = Double(responseValue) else { //kademe verisi kendi icinde double cevrilir
+                print("Kademe değeri sayıya çevrilemedi: \(responseValue)")
+                return
+            }
             level = value
             commandStatus = "Cevap alındı"
             print("Kademe güncellendi: \(value)")
+            
+        case .dateTime:
+            dateTime = responseValue
+            commandStatus = "Cevap alındı"
+            print("Tarih-Saat güncellendi: \(responseValue)")
         }
         self.pendingCommand = nil
     }
@@ -368,7 +352,7 @@ final class BluetoothManager: NSObject,
     //String komutu BLE üzerinden gönderir
     func send(message: String) {
         //girilen mesaj tanimli bir komutsa command icine alir
-        guard let command = Command.from(message) else {
+        guard let command = Command(rawValue: message) else {
             commandStatus = "Geçersiz komut"
             print("Geçersiz komut: \(message)")
             return

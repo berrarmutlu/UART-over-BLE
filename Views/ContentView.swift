@@ -49,6 +49,11 @@ struct ContentView: View {
             }
             
             if bluetoothManager.isConnected {
+                            
+                Button("Disconnect") {
+                    bluetoothManager.disconnect()
+                }
+                .buttonStyle(.bordered)
                 
                 HStack(spacing: 12) { //temperature ve humidity ekranda yan yana dizilir
                     
@@ -109,11 +114,28 @@ struct ContentView: View {
                 .background(Color(.systemGray6))
                 .cornerRadius(12)
                 
-                
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Date Time")
+                        .font(.headline)
+                    
+                    if let dateTime = bluetoothManager.dateTime {
+                        Text(dateTime)
+                            .font(.system(size: 32, weight: .bold))
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                    } else {
+                        Text("--")
+                            .font(.system(size: 32, weight: .bold))
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                    }
+                }
+                .frame(maxWidth: .infinity)
+                .padding()
+                .background(Color(.systemGray6))
+                .cornerRadius(12)
                 
                 //mesaj alani
                 HStack { //komut girisi ve gonderme butonunu yan yana gosterir
-                    TextField("Enter command (?T, ?H, ?L)", text: $message)
+                    TextField("Enter command (?T, ?H, ?L, ?D)", text: $message)
                         .textFieldStyle(.roundedBorder)
                     
                     Button("Send") {
