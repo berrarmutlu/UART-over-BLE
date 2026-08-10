@@ -34,6 +34,12 @@ final class BluetoothManager: NSObject,
     private var centralManager: CBCentralManager?
     @Published private(set) var discoveredPeripherals: [CBPeripheral] = [] //bulunan cihazlar listeye eklenir
     private var connectedPeripheral: CBPeripheral?
+    @Published private(set) var previouslyConnectedDevices: [CBPeripheral] = []
+    private let savedDeviceKey = "savedDeviceIdentifiers"
+    
+    var connectedDeviceName: String {
+        connectedPeripheral?.name ?? "Unknown Device"
+    }
     
     private var pendingCommand: Command? //su anda hangi komutun cevabini bekliyorum
     
@@ -58,6 +64,16 @@ final class BluetoothManager: NSObject,
         case .poweredOn:
             isBluetoothReady = true
             statusMessage = "Bluetooth hazır"
+            
+            let savedIdentifiers =
+                UserDefaults.standard.stringArray(forKey: savedDeviceKey) ?? []
+
+            let uuids = savedIdentifiers.compactMap {
+                UUID(uuidString: $0)
+            }
+
+            let peripherals = central.retrievePeripherals(withIdentifiers: uuids)
+            previouslyConnectedDevices = peripherals
             
         case .poweredOff:
             isBluetoothReady = false
@@ -128,7 +144,13 @@ final class BluetoothManager: NSObject,
                 device.identifier == peripheral.identifier // UUID'ler ayniysa cihaz zaten listede vardir
             }
         
-        if !alreadyExists { //eger bu cihaz daha once listede yoksa listeye ekle, ! not operatoru degeri tersine cevirir
+        let isPreviouslyConnected =
+            previouslyConnectedDevices.contains { device in
+                device.identifier == peripheral.identifier
+            }
+        
+        
+        if !alreadyExists && !isPreviouslyConnected { 
             discoveredPeripherals.append(peripheral)
             print("Bulunan cihaz: \(deviceName)")
         }
@@ -159,6 +181,16 @@ final class BluetoothManager: NSObject,
         connectedPeripheral = peripheral
         isConnected = true
         statusMessage = "Bağlandı"
+        
+        var savedIdentifiers = UserDefaults.standard.stringArray(forKey: savedDeviceKey) ?? []
+
+        let identifier = peripheral.identifier.uuidString
+
+        if !savedIdentifiers.contains(identifier) {
+            savedIdentifiers.append(identifier)
+            UserDefaults.standard.set(savedIdentifiers, forKey: savedDeviceKey)
+        }
+        
         peripheral.delegate = self // callbackler bluetoothmanagera gelsin
         peripheral.discoverServices(nil) // hm10un butun servislerini istemek
     }

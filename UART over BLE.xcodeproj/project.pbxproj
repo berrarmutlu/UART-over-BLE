@@ -8,6 +8,8 @@
 
 /* Begin PBXBuildFile section */
 		392E6EC530050AF300799A6C /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 392E6EC430050AF300799A6C /* ContentView.swift */; };
+		397287723025CAD3001BB369 /* DeviceListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 397287713025CAD0001BB369 /* DeviceListView.swift */; };
+		397287743025CAF4001BB369 /* DeviceDashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 397287733025CAEE001BB369 /* DeviceDashboardView.swift */; };
 		39CA7265300A160600BB3F4B /* BluetoothManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39716520300617170083C1A4 /* BluetoothManager.swift */; };
 /* End PBXBuildFile section */
 
@@ -15,6 +17,8 @@
 		392E6EBF30050AF300799A6C /* UART over BLE.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "UART over BLE.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		392E6EC430050AF300799A6C /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		39716520300617170083C1A4 /* BluetoothManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BluetoothManager.swift; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.swift; };
+		397287713025CAD0001BB369 /* DeviceListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceListView.swift; sourceTree = "<group>"; };
+		397287733025CAEE001BB369 /* DeviceDashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceDashboardView.swift; sourceTree = "<group>"; };
 		39F256BE30067982004BD621 /* BluetoothViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BluetoothViewModel.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -67,6 +71,8 @@
 		392E6ED03005105200799A6C /* Views */ = {
 			isa = PBXGroup;
 			children = (
+				397287733025CAEE001BB369 /* DeviceDashboardView.swift */,
+				397287713025CAD0001BB369 /* DeviceListView.swift */,
 				392E6EC430050AF300799A6C /* ContentView.swift */,
 			);
 			path = Views;
@@ -154,7 +160,9 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				397287743025CAF4001BB369 /* DeviceDashboardView.swift in Sources */,
 				392E6EC530050AF300799A6C /* ContentView.swift in Sources */,
+				397287723025CAD3001BB369 /* DeviceListView.swift in Sources */,
 				39CA7265300A160600BB3F4B /* BluetoothManager.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
