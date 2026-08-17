@@ -1,0 +1,1 @@
+guard let data = message.data(using: .utf8) else {

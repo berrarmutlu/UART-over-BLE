@@ -8,13 +8,6 @@
 import Combine
 import CoreBluetooth
 
-enum Command: String { //komut(lar)
-    case temperature = "?T"
-    case humidity = "?H"
-    case level = "?L"
-    case dateTime = "?D"
-    
-    }
 
 final class BluetoothManager: NSObject,
                               ObservableObject,
@@ -29,6 +22,8 @@ final class BluetoothManager: NSObject,
     @Published private(set) var temperature: Double?
     @Published private(set) var level: Double?
     @Published private(set) var dateTime: String?
+    @Published private(set) var serialNumber: String?
+    @Published private(set) var calibrationDate: Date?
     @Published private(set) var commandStatus = ""
     
     private var centralManager: CBCentralManager?
@@ -66,12 +61,12 @@ final class BluetoothManager: NSObject,
             statusMessage = "Bluetooth hazır"
             
             let savedIdentifiers =
-                UserDefaults.standard.stringArray(forKey: savedDeviceKey) ?? []
-
+            UserDefaults.standard.stringArray(forKey: savedDeviceKey) ?? []
+            
             let uuids = savedIdentifiers.compactMap {
                 UUID(uuidString: $0)
             }
-
+            
             let peripherals = central.retrievePeripherals(withIdentifiers: uuids)
             previouslyConnectedDevices = peripherals
             
@@ -145,12 +140,12 @@ final class BluetoothManager: NSObject,
             }
         
         let isPreviouslyConnected =
-            previouslyConnectedDevices.contains { device in
-                device.identifier == peripheral.identifier
-            }
+        previouslyConnectedDevices.contains { device in
+            device.identifier == peripheral.identifier
+        }
         
         
-        if !alreadyExists && !isPreviouslyConnected { 
+        if !alreadyExists && !isPreviouslyConnected {
             discoveredPeripherals.append(peripheral)
             print("Bulunan cihaz: \(deviceName)")
         }
@@ -183,9 +178,9 @@ final class BluetoothManager: NSObject,
         statusMessage = "Bağlandı"
         
         var savedIdentifiers = UserDefaults.standard.stringArray(forKey: savedDeviceKey) ?? []
-
+        
         let identifier = peripheral.identifier.uuidString
-
+        
         if !savedIdentifiers.contains(identifier) {
             savedIdentifiers.append(identifier)
             UserDefaults.standard.set(savedIdentifiers, forKey: savedDeviceKey)
@@ -299,9 +294,9 @@ final class BluetoothManager: NSObject,
         print("Gelen veri: \(message)")
         receivedMessage = message //kontrol amacli
         
-        let cleanMessage = message.trimmingCharacters(in: .whitespacesAndNewlines) //gelen stringi temizleme
-        let parts = cleanMessage.split(separator: "_") //mesaji parcalara ayirir (komut_deger)
-        guard parts.count == 2 else { //iki parca mi kontrolu
+        let cleanMessage = message.trimmingCharacters(in: .whitespacesAndNewlines)
+        let parts = cleanMessage.split(separator: " ", maxSplits: 1)
+        guard parts.count == 2 else {
             print("Geçersiz cevap formatı: \(cleanMessage)")
             return
         }
@@ -356,9 +351,30 @@ final class BluetoothManager: NSObject,
             dateTime = responseValue
             commandStatus = "Cevap alındı"
             print("Tarih-Saat güncellendi: \(responseValue)")
+            
+        case .serialNumber:
+            serialNumber = responseValue
+            commandStatus = "Cevap alındı"
+            print("Seri numarası güncellendi: \(responseValue)")
+            
+        case .calibrationDate:
+            let formatter = DateFormatter()
+            formatter.dateFormat = DeviceDateFormat.date
+            
+            guard let date = formatter.date(from: responseValue) else {
+                print("Kalibrasyon tarihi çözülemedi: \(responseValue)")
+                return
+            }
+            
+            calibrationDate = date
+            commandStatus = "Cevap alındı"
+            
+            print("Kalibrasyon tarihi: \(date)")
         }
         self.pendingCommand = nil
     }
+    
+
     
     //notify ozelliginin acilip acilmadigini kontrol eder
     func peripheral(
@@ -383,14 +399,14 @@ final class BluetoothManager: NSObject,
     
     //String komutu BLE üzerinden gönderir
     func send(message: String) {
-        //girilen mesaj tanimli bir komutsa command icine alir
         guard let command = Command(rawValue: message) else {
             commandStatus = "Geçersiz komut"
             print("Geçersiz komut: \(message)")
             return
         }
-        //String veriyi BLE'nin gönderebileceği Data tipine cevirir
-        guard let data = message.data(using: .utf8) else {
+        
+        let commandToSend = message + "\r"
+        guard let data = commandToSend.data(using: .utf8) else {
             return
         }
         guard let txCharacteristic else {
@@ -409,5 +425,28 @@ final class BluetoothManager: NSObject,
             type: .withoutResponse
         )
     }
-    
+    func sendDateTime(_ command: String) {
+        let commandToSend = command + "\r"
+        
+        guard let data = commandToSend.data(using: .utf8) else {
+            return
+        }
+        
+        guard let txCharacteristic else {
+            return
+        }
+        
+        guard let connectedPeripheral else {
+            return
+        }
+        
+        print("Gönderilen komut: \(command)")
+        print("Gönderilen byte sayısı: \(data.count)")
+        
+        connectedPeripheral.writeValue(
+            data,
+            for: txCharacteristic,
+            type: .withoutResponse
+        )
+    }
 }

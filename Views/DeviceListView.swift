@@ -1,5 +1,5 @@
 //
-//      DeviceListView.swift
+//DeviceListView.swift
 //  UART over BLE
 //
 //  Created by Berra Armutlu on 7.08.2026.
@@ -11,6 +11,7 @@ import CoreBluetooth
 struct DeviceListView: View {
     
     @ObservedObject var bluetoothManager: BluetoothManager
+    @State private var navigateToDashboard = false
     
     var body: some View {
         ScrollView {
@@ -50,7 +51,11 @@ struct DeviceListView: View {
                             id: \.identifier
                         ) { peripheral in
                             Button {
-                                bluetoothManager.connect(to: peripheral)
+                                if bluetoothManager.isConnected {
+                                    navigateToDashboard = true
+                                } else {
+                                    bluetoothManager.connect(to: peripheral)
+                                }
                             } label: {
                                 HStack {
                                     Image(systemName: "dot.radiowaves.left.and.right")
@@ -87,7 +92,11 @@ struct DeviceListView: View {
                             id: \.identifier
                         ) { peripheral in
                             Button {
-                                bluetoothManager.connect(to: peripheral)
+                                if bluetoothManager.isConnected {
+                                    navigateToDashboard = true
+                                } else {
+                                    bluetoothManager.connect(to: peripheral)
+                                }
                             } label: {
                                 HStack {
                                     Image(systemName: "dot.radiowaves.left.and.right")
@@ -116,6 +125,14 @@ struct DeviceListView: View {
                 }
             }
             .padding()
+            .onChange(of: bluetoothManager.isConnected) {
+                if bluetoothManager.isConnected {
+                    navigateToDashboard = true
+                }
+            }
+            .navigationDestination(isPresented: $navigateToDashboard) {
+                DeviceDashboardView(bluetoothManager: bluetoothManager)
+            }
         }
     }
 }

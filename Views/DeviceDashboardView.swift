@@ -13,11 +13,75 @@ struct DeviceDashboardView: View {
     @State private var message = ""
     @State private var selectedCommand: Command? //kullanicinin sectigi komut
     
+    
+    private var machineDateText: String {
+        guard let dateTime = bluetoothManager.dateTime else {
+            return "--"
+        }
+
+        let parts = dateTime.split(separator: " ")
+
+        guard parts.count == 2 else {
+            return "--"
+        }
+
+        let formatter = DateFormatter()
+        formatter.dateFormat = DeviceDateFormat.date
+
+        guard let date = formatter.date(from: String(parts[0])) else {
+            return "--"
+        }
+
+        let displayFormatter = DateFormatter()
+        displayFormatter.dateFormat = DisplayDateFormat.date
+
+        return displayFormatter.string(from: date)
+    }
+
+    private var machineTimeText: String {
+        guard let dateTime = bluetoothManager.dateTime else {
+            return "--"
+        }
+
+        let parts = dateTime.split(separator: " ")
+
+        guard parts.count == 2 else {
+            return "--"
+        }
+
+        let timeString = String(parts[1])
+
+        guard timeString.count >= 4 else {
+            return "--"
+        }
+
+        let hour = timeString.prefix(2)
+        let minute = timeString.dropFirst(2).prefix(2)
+
+        return "\(hour):\(minute)"
+    }
+    
+    
+    
     var body: some View {
         if bluetoothManager.isConnected {
             ScrollView {
                 
                 VStack(alignment: .leading, spacing: 16) {
+                    
+                    
+                    HStack {
+                        Text(machineDateText)
+                        
+                        Spacer()
+                        
+                        Text(machineTimeText)
+                    }
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                    
+                    
+                    
                     HStack {
                         VStack(alignment: .leading, spacing: 4) {
                             Text("Dashboard")
@@ -30,11 +94,21 @@ struct DeviceDashboardView: View {
                         }
                         
                         Spacer()
-                        
-                        Text("Connected")
-                            .font(.subheadline)
-                            .fontWeight(.semibold)
-                            .foregroundStyle(.green)
+
+                        VStack(alignment: .trailing, spacing: 6) {
+                            Text("Connected")
+                                .font(.subheadline)
+                                .fontWeight(.semibold)
+                                .foregroundStyle(.green)
+
+                            NavigationLink {
+                                InformationView(bluetoothManager: bluetoothManager)
+                            } label: {
+                                Label("Information", systemImage: "info.circle")
+                                    .font(.subheadline)
+                            }
+                            .buttonStyle(.bordered)
+                        }
                     }
                     
                     VStack(alignment: .leading, spacing: 16) {
@@ -44,21 +118,14 @@ struct DeviceDashboardView: View {
                             //temperature sicaklik
                             VStack(alignment: .leading, spacing: 6) {
                                 HStack(spacing: 8) {
-
                                     Image(systemName: "thermometer.medium")
-
                                         .font(.title2)
-
                                         .foregroundStyle(.blue)
-
                                     Text("Temperature")
-
                                         .font(.headline)
-
                                 }
-
                                 if let temperature = bluetoothManager.temperature {
-                                    Text("\(temperature, specifier: "%.1f") °C") //__,_ seklindeki gosterim
+                                    Text("\(temperature, specifier: "%.2f") °C") //__,__ seklindeki gosterim
                                         .font(.system(size: 32, weight: .bold))
                                 } else {
                                     Text("-- °C")
@@ -84,8 +151,7 @@ struct DeviceDashboardView: View {
                                 }
 
                                 if let humidity = bluetoothManager.humidity {
-                                    Text("\(humidity, specifier: "%.1f") %")
-                                        .font(.system(size: 32, weight: .bold))
+                                    Text("\(humidity, specifier: "%.0f") %")                                        .font(.system(size: 32, weight: .bold))
                                 } else {
                                     Text("-- %")
                                         .font(.system(size: 32, weight: .bold))
@@ -110,8 +176,7 @@ struct DeviceDashboardView: View {
                             }
 
                             if let level = bluetoothManager.level {
-                                Text("\(level, specifier: "%.0f")")
-                                    .font(.system(size: 32, weight: .bold))
+                                Text("\(Int(level), specifier: "%02d")")                                    .font(.system(size: 32, weight: .bold))
                             } else {
                                 Text("--")
                                     .font(.system(size: 32, weight: .bold))
@@ -123,30 +188,6 @@ struct DeviceDashboardView: View {
                         .background(Color(.systemGray6))
                         .cornerRadius(12)
                         
-                        //dateTime makine tarih zaman
-                        VStack(alignment: .leading, spacing: 6) {
-                            HStack(spacing: 8) {
-                                Image(systemName: "clock")
-                                    .font(.title2)
-                                    .foregroundStyle(.blue)
-
-                                Text("Date / Time")
-                                    .font(.headline)
-                            }
-
-                            if let dateTime = bluetoothManager.dateTime {
-                                Text(dateTime)
-                                    .font(.system(size: 24, weight: .bold))
-                            } else {
-                                Text("--")
-                                    .font(.system(size: 32, weight: .bold))
-                            }
-                        }
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding(.horizontal, 20)
-                        .padding(.vertical, 8)
-                        .background(Color(.systemGray6))
-                        .cornerRadius(12)
                         
                         //mesaj alani
                         HStack(spacing: 8) {
@@ -193,9 +234,9 @@ struct DeviceDashboardView: View {
                                 .font(.subheadline)
                                 .foregroundStyle(.secondary)
                         }
-                        
                     }
                 }
+                .padding()
             }
         }
     }
