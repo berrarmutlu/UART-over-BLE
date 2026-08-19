@@ -213,7 +213,7 @@ struct InformationView: View {
 
                         let weekday = weekdayFormatter.string(from: now)
 
-                        let command = "?D \(dateString)\(weekday)"
+                        let command = "?D \(dateString)\(weekday)" 
 
                         bluetoothManager.sendDateTime(command)
                     }
