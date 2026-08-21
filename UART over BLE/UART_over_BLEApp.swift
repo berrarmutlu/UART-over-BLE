@@ -11,7 +11,7 @@ import SwiftUI
 struct UART_over_BLEApp: App {
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            SplashView()
         }
     }
 }

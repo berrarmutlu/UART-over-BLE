@@ -80,18 +80,16 @@ struct DeviceDashboardView: View {
                 Spacer()
                     .frame(height: 70)
                 
-                
-                
                 HStack(spacing: 40) {
                     
                     // Temperature
-                    VStack(alignment: .leading, spacing: 8) {
+                    VStack(alignment: .center, spacing: 8) {
                         HStack(spacing: 8) {
                             Image(systemName: "thermometer.medium")
                                 .font(.title2)
                                 .foregroundStyle(.blue)
                             
-                            Text("Temperature")
+                            Text("Sıcaklık")
                                 .font(.headline)
                         }
                         
@@ -103,17 +101,17 @@ struct DeviceDashboardView: View {
                                 .font(.system(size: 28, weight: .bold))
                         }
                     }
-                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .frame(maxWidth: .infinity, alignment: .center)
                     
                     
                     // Humidity
-                    VStack(alignment: .leading, spacing: 8) {
+                    VStack(alignment: .center, spacing: 8) {
                         HStack(spacing: 8) {
                             Image(systemName: "humidity")
                                 .font(.title2)
                                 .foregroundStyle(.blue)
                             
-                            Text("Humidity")
+                            Text("Nem")
                                 .font(.headline)
                         }
                         
@@ -125,7 +123,7 @@ struct DeviceDashboardView: View {
                                 .font(.system(size: 28, weight: .bold))
                         }
                     }
-                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .frame(maxWidth: .infinity, alignment: .center)
                 }
                 .padding(.horizontal, 20)
                 
@@ -138,7 +136,7 @@ struct DeviceDashboardView: View {
                             .font(.title2)
                             .foregroundStyle(.blue)
                         
-                        Text("Machine Level")
+                        Text("Cihaz Seviyesi")
                             .font(.headline)
                     }
                     
@@ -176,7 +174,7 @@ struct DeviceDashboardView: View {
                         
 
                         VStack(spacing: 4) {
-                            Text("LEVEL")
+                            Text("Seviye")
                                 .font(.caption)
                                 .fontWeight(.semibold)
                                 .foregroundStyle(.secondary)
@@ -224,26 +222,30 @@ struct DeviceDashboardView: View {
                 .padding(.top, 20)
                 
                 
-                //Picker
+                Spacer()
+            }
+            .padding(.top, 10)
+            .padding(.horizontal, 20)
+            .safeAreaInset(edge: .bottom) {
                 HStack(spacing: 8) {
                     Picker("Select command...", selection: $selectedCommand) {
                         Text("Select command...")
                             .tag(Command?.none)
-                        
+
                         Text("Temperature")
                             .tag(Command?.some(.temperature))
-                        
+
                         Text("Humidity")
                             .tag(Command?.some(.humidity))
-                        
+
                         Text("Machine Level")
                             .tag(Command?.some(.level))
-                        
+
                         Text("Date / Time")
                             .tag(Command?.some(.dateTime))
                     }
                     .pickerStyle(.menu)
-                    
+
                     Button {
                         if let selectedCommand {
                             bluetoothManager.send(message: selectedCommand.rawValue)
@@ -261,17 +263,14 @@ struct DeviceDashboardView: View {
                     .padding(.trailing, 8)
                 }
                 .frame(height: 50)
+                .frame(maxWidth: .infinity)
                 .background(Color(.systemGray6))
                 .clipShape(Capsule())
-                .padding(.top, 35)
-                .frame(maxWidth: .infinity)
-                
-                Spacer()
+                .padding(.horizontal, 20)
+                .padding(.top, 12)
             }
-            .padding(.top, 10)
-            .padding(.horizontal, 20)
             
-            .navigationTitle("Dashboard")
+            .navigationTitle("Kontrol Paneli")
             .navigationBarTitleDisplayMode(.inline)
             
             .toolbar {
@@ -283,7 +282,7 @@ struct DeviceDashboardView: View {
                             )
                         } label: {
                             Label(
-                                "Information",
+                                "Bilgi Ekranı",
                                 systemImage: "info.circle"
                             )
                         }

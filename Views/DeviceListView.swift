@@ -15,35 +15,25 @@ struct DeviceListView: View {
     
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 20) {
+            VStack(alignment: .leading, spacing: 24) {
+                
                 
                 HStack {
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text("UART over BLE")
-                            .font(.largeTitle)
-                            .fontWeight(.bold)
-                            .lineLimit(1)
-                            .minimumScaleFactor(0.5)
-                    }
-                    
-                    Spacer()
-                    
-                    Button {
-                        bluetoothManager.scan()
-                    } label: {
-                        Label("Scan", systemImage: "arrow.clockwise")
-                    }
-                    .buttonStyle(.bordered)
+                    Text("UART over BLE")
+                        .font(.headline)
+                        .fontWeight(.semibold)
+                        .frame(maxWidth: .infinity, alignment: .center)
                 }
                 
-                // daha onceden baglanmis cihazlarin listesi
                 VStack(alignment: .leading, spacing: 10) {
-                    Text("My Devices")
-                        .font(.title3)
+                    
+                    Text("CİHAZLARIM")
+                        .font(.subheadline)
                         .fontWeight(.semibold)
+                        .foregroundStyle(.secondary)
                     
                     if bluetoothManager.previouslyConnectedDevices.isEmpty {
-                        Text("No saved devices")
+                        Text("Kayıtlı cihaz bulunamadı")
                             .foregroundStyle(.secondary)
                     } else {
                         ForEach(
@@ -61,7 +51,7 @@ struct DeviceListView: View {
                                     Image(systemName: "dot.radiowaves.left.and.right")
                                         .foregroundStyle(.blue)
                                     
-                                    Text(peripheral.name ?? "Unknown Device")
+                                    Text(peripheral.name ?? "Bilinmeyen Cihaz")
                                     
                                     Spacer()
                                     
@@ -77,14 +67,16 @@ struct DeviceListView: View {
                     }
                 }
                 
-                // daha once baglanmamis ama baglanmaya uygun cihazlarin listesi
+                
                 VStack(alignment: .leading, spacing: 10) {
-                    Text("Other Devices")
-                        .font(.title3)
+                    
+                    Text("DİĞER CİHAZLAR")
+                        .font(.subheadline)
                         .fontWeight(.semibold)
+                        .foregroundStyle(.secondary)
                     
                     if bluetoothManager.discoveredPeripherals.isEmpty {
-                        Text("No devices found")
+                        Text("Cihaz bulunamadı")
                             .foregroundStyle(.secondary)
                     } else {
                         ForEach(
@@ -102,7 +94,7 @@ struct DeviceListView: View {
                                     Image(systemName: "dot.radiowaves.left.and.right")
                                         .foregroundStyle(.blue)
                                     
-                                    Text(peripheral.name ?? "Unknown Device")
+                                    Text(peripheral.name ?? "Bilinmeyen Cihaz")
                                     
                                     Spacer()
                                     
@@ -123,6 +115,15 @@ struct DeviceListView: View {
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
                 }
+                
+                VStack(alignment: .leading) {
+                    Button {
+                        bluetoothManager.scan()
+                    } label: {
+                        Label("Tara", systemImage: "arrow.clockwise")
+                    }
+                    .buttonStyle(.bordered)
+                }
             }
             .padding()
             .onChange(of: bluetoothManager.isConnected) {
@@ -136,6 +137,8 @@ struct DeviceListView: View {
         }
     }
 }
+
+
 
 #Preview {
     DeviceListView(bluetoothManager: BluetoothManager())
