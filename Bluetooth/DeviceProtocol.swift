@@ -17,6 +17,10 @@ enum Command: String { //komut(lar)
     
     }
 
+enum LevelCommand: String {
+    case increase = "?l+"
+    case decrease = "?l-"
+}
 
 enum DeviceDateFormat {
     static let date = "yyyyMMdd"

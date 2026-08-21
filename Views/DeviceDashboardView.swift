@@ -62,145 +62,214 @@ struct DeviceDashboardView: View {
     }
     
     
-    
     var body: some View {
         if bluetoothManager.isConnected {
-            VStack {
+            VStack(spacing: 0) {
                 
-                // Tarih ve saat
+                
                 HStack(spacing: 8) {
                     Text(machineDateText)
                     Text(machineTimeText)
                 }
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
-                .frame(maxWidth: .infinity, alignment: .center)
+                .frame(maxWidth: .infinity)
                 
+                
+                // Tarih/saat ile sıcaklık-nem arasında boşluk
                 Spacer()
+                    .frame(height: 70)
                 
-                // Dashboard içeriği
-                VStack(alignment: .leading, spacing: 20) {
+                
+                
+                HStack(spacing: 40) {
                     
-                    // Temperature + Humidity
-                    HStack(spacing: 12) {
-                        
-                        // Temperature
-                        VStack(alignment: .leading, spacing: 8) {
-                            HStack(spacing: 8) {
-                                Image(systemName: "thermometer.medium")
-                                    .font(.title2)
-                                    .foregroundStyle(.blue)
-                                
-                                Text("Temperature")
-                                    .font(.headline)
-                            }
-                            
-                            if let temperature = bluetoothManager.temperature {
-                                Text("\(temperature, specifier: "%.2f") °C")
-                                    .font(.system(size: 28, weight: .bold))
-                            } else {
-                                Text("-- °C")
-                                    .font(.system(size: 28, weight: .bold))
-                            }
-                        }
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        
-                        
-                        // Humidity
-                        VStack(alignment: .leading, spacing: 8) {
-                            HStack(spacing: 8) {
-                                Image(systemName: "humidity")
-                                    .font(.title2)
-                                    .foregroundStyle(.blue)
-                                
-                                Text("Humidity")
-                                    .font(.headline)
-                            }
-                            
-                            if let humidity = bluetoothManager.humidity {
-                                Text("\(humidity, specifier: "%.0f") %")
-                                    .font(.system(size: 28, weight: .bold))
-                            } else {
-                                Text("-- %")
-                                    .font(.system(size: 28, weight: .bold))
-                            }
-                        }
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                    }
-                    
-                    
-                    // Machine Level
-                    VStack(alignment: .leading, spacing: 6) {
+                    // Temperature
+                    VStack(alignment: .leading, spacing: 8) {
                         HStack(spacing: 8) {
-                            Image(systemName: "gearshape.2")
+                            Image(systemName: "thermometer.medium")
                                 .font(.title2)
                                 .foregroundStyle(.blue)
                             
-                            Text("Machine Level")
+                            Text("Temperature")
                                 .font(.headline)
                         }
                         
-                        if let level = bluetoothManager.level {
-                            Text("\(Int(level), specifier: "%02d")")
-                                .font(.system(size: 32, weight: .bold))
+                        if let temperature = bluetoothManager.temperature {
+                            Text("\(temperature, specifier: "%.2f") °C")
+                                .font(.system(size: 28, weight: .bold))
                         } else {
-                            Text("--")
-                                .font(.system(size: 32, weight: .bold))
+                            Text("-- °C")
+                                .font(.system(size: 28, weight: .bold))
                         }
                     }
+                    .frame(maxWidth: .infinity, alignment: .leading)
                     
                     
-                    // Komut alanı
-                    HStack(spacing: 8) {
-                        Picker("Select command...", selection: $selectedCommand) {
-                            Text("Select command...")
-                                .tag(Command?.none)
-                            
-                            Text("Temperature")
-                                .tag(Command?.some(.temperature))
+                    // Humidity
+                    VStack(alignment: .leading, spacing: 8) {
+                        HStack(spacing: 8) {
+                            Image(systemName: "humidity")
+                                .font(.title2)
+                                .foregroundStyle(.blue)
                             
                             Text("Humidity")
-                                .tag(Command?.some(.humidity))
-                            
-                            Text("Machine Level")
-                                .tag(Command?.some(.level))
-                            
-                            Text("Date / Time")
-                                .tag(Command?.some(.dateTime))
+                                .font(.headline)
                         }
-                        .pickerStyle(.menu)
                         
-                        Button {
-                            if let selectedCommand {
-                                bluetoothManager.send(message: selectedCommand.rawValue)
-                                self.selectedCommand = nil
-                            }
-                        } label: {
-                            Image(systemName: "arrow.up")
-                                .font(.subheadline)
-                                .fontWeight(.bold)
-                                .frame(width: 34, height: 34)
-                                .background(Color.blue)
-                                .clipShape(Circle())
+                        if let humidity = bluetoothManager.humidity {
+                            Text("\(humidity, specifier: "%.0f") %")
+                                .font(.system(size: 28, weight: .bold))
+                        } else {
+                            Text("-- %")
+                                .font(.system(size: 28, weight: .bold))
                         }
-                        .buttonStyle(.plain)
-                        .padding(.trailing, 8)
                     }
-                    .frame(height: 50)
-                    .background(Color(.systemGray6))
-                    .clipShape(Capsule())
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                }
+                .padding(.horizontal, 20)
+                
+                
+                // Machine Level
+                VStack(spacing: 16) {
                     
-                    if !bluetoothManager.commandStatus.isEmpty {
-                        Text(bluetoothManager.commandStatus)
-                            .font(.subheadline)
-                            .foregroundStyle(.secondary)
+                    HStack(spacing: 8) {
+                        Image(systemName: "gearshape.2")
+                            .font(.title2)
+                            .foregroundStyle(.blue)
+                        
+                        Text("Machine Level")
+                            .font(.headline)
                     }
+                    
+                    ZStack {
+                        // Arka plan çemberi
+                        Circle()
+                            .stroke(
+                                Color(.systemGray5),
+                                style: StrokeStyle(lineWidth: 16)
+                            )
+                        
+                        // Aktif bolum
+                        Circle()
+                            .trim(
+                                from: 0,
+                                to: bluetoothManager.level.map { CGFloat($0) / 10 } ?? 0
+                            )
+                            .stroke(
+                                Color.blue,
+                                style: StrokeStyle(
+                                    lineWidth: 16,
+                                    lineCap: .round
+                                )
+                            )
+                            .rotationEffect(.degrees(-90))
+                            .animation(.easeInOut(duration: 0.4), value: bluetoothManager.level)
+                        
+                        ForEach(0..<10) { index in
+                            Rectangle()
+                                .fill(Color.black)
+                                .frame(width: 3, height: 8)
+                                .offset(y: -80)
+                                .rotationEffect(.degrees(Double(index) * 36))
+                        }
+                        
+
+                        VStack(spacing: 4) {
+                            Text("LEVEL")
+                                .font(.caption)
+                                .fontWeight(.semibold)
+                                .foregroundStyle(.secondary)
+                            
+                            if let level = bluetoothManager.level {
+                                Text("\(Int(level))")
+                                    .font(.system(size: 56, weight: .bold))
+                            } else {
+                                Text("--")
+                                    .font(.system(size: 56, weight: .bold))
+                            }
+                        }
+                    }
+                    .frame(width: 175, height: 175)
+                }
+                .padding(.top, 35)
+                
+                HStack {
+                    Button {
+                        bluetoothManager.send(message: LevelCommand.decrease.rawValue)
+                    } label: {
+                        Image(systemName: "minus")
+                            .font(.title2)
+                            .frame(width: 50, height: 50)
+                            .background(Color(.systemGray6))
+                            .clipShape(RoundedRectangle(cornerRadius: 16))
+                    }
+                    .disabled(bluetoothManager.level == 1)
+
+                    Spacer()
+
+                    Button {
+                        bluetoothManager.send(message: LevelCommand.increase.rawValue)
+                    } label: {
+                        Image(systemName: "plus")
+                            .font(.title2)
+                            .frame(width: 50, height: 50)
+                            .background(Color(.systemGray6))
+                            .clipShape(RoundedRectangle(cornerRadius: 16))
+                    }
+                    .disabled(bluetoothManager.level == 10)
                 }
                 .frame(maxWidth: .infinity)
-                .padding(.horizontal, 20)
+                .padding(.horizontal, 25)
+                .padding(.top, 20)
+                
+                
+                //Picker
+                HStack(spacing: 8) {
+                    Picker("Select command...", selection: $selectedCommand) {
+                        Text("Select command...")
+                            .tag(Command?.none)
+                        
+                        Text("Temperature")
+                            .tag(Command?.some(.temperature))
+                        
+                        Text("Humidity")
+                            .tag(Command?.some(.humidity))
+                        
+                        Text("Machine Level")
+                            .tag(Command?.some(.level))
+                        
+                        Text("Date / Time")
+                            .tag(Command?.some(.dateTime))
+                    }
+                    .pickerStyle(.menu)
+                    
+                    Button {
+                        if let selectedCommand {
+                            bluetoothManager.send(message: selectedCommand.rawValue)
+                            self.selectedCommand = nil
+                        }
+                    } label: {
+                        Image(systemName: "arrow.up")
+                            .font(.subheadline)
+                            .fontWeight(.bold)
+                            .frame(width: 34, height: 34)
+                            .background(Color.blue)
+                            .clipShape(Circle())
+                    }
+                    .buttonStyle(.plain)
+                    .padding(.trailing, 8)
+                }
+                .frame(height: 50)
+                .background(Color(.systemGray6))
+                .clipShape(Capsule())
+                .padding(.top, 35)
+                .frame(maxWidth: .infinity)
                 
                 Spacer()
             }
+            .padding(.top, 10)
+            .padding(.horizontal, 20)
             
             .navigationTitle("Dashboard")
             .navigationBarTitleDisplayMode(.inline)
@@ -227,7 +296,6 @@ struct DeviceDashboardView: View {
         }
     }
 }
-
 
 #Preview {
     DeviceDashboardView(

@@ -92,16 +92,17 @@ struct InformationView: View {
     
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 20) {
+            VStack(alignment: .leading, spacing: 0) {
                 
-                Text("Information")
-                    .font(.largeTitle)
-                    .fontWeight(.bold)
                 
-                Text("DEVICE INFORMATION")
-                    .font(.caption)
-                    .fontWeight(.semibold)
-                    .foregroundStyle(.secondary)
+                Text("İyonizörlü Koku Giderme Cihazı")
+                    .font(.headline)
+                    .fontWeight(.medium)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.7)
+                    .frame(maxWidth: .infinity, alignment: .center)
+                    .padding(.top, 12)
+                    .padding(.bottom, 20)
                 
                 VStack(alignment: .leading, spacing: 6) {
                     Text("Serial Number")
@@ -109,20 +110,12 @@ struct InformationView: View {
                         .foregroundStyle(.secondary)
                     
                     Text(bluetoothManager.serialNumber ?? "--")
-                        .font(.headline)
+                        .font(.body)
                         .fontWeight(.medium)
                 }
-                .padding()
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .background(Color(.systemGray6))
-                .cornerRadius(12)
+                .padding(.bottom, 20)
                 
-                
-                
-                Text("CALIBRATION")
-                    .font(.caption)
-                    .fontWeight(.semibold)
-                    .foregroundStyle(.secondary)
                 
                 VStack(alignment: .leading, spacing: 6) {
                     Text("Calibration")
@@ -130,47 +123,11 @@ struct InformationView: View {
                         .foregroundStyle(.secondary)
                     
                     Text(calibrationText)
-                        .font(.system(size: 20, weight: .medium))
+                        .font(.body)
+                        .fontWeight(.medium)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(.horizontal, 20)
-                .padding(.vertical, 8)
-                .background(Color(.systemGray6))
-                .cornerRadius(12)
-                
-                //picker command send
-                HStack(spacing: 8) {
-                    Picker("Select command...", selection: $selectedCommand) {
-                        Text("Select command...")
-                            .tag(Command?.none)
-                        
-                        Text("Serial Number")
-                            .tag(Command?.some(.serialNumber))
-                        
-                        Text("Calibration")
-                            .tag(Command?.some(.calibrationDate))
-                    }
-                    .pickerStyle(.menu)
-                    
-                    Button {
-                        if let selectedCommand {
-                            bluetoothManager.send(message: selectedCommand.rawValue)
-                            self.selectedCommand = nil
-                        }
-                    } label: {
-                        Image(systemName: "arrow.up")
-                            .font(.subheadline)
-                            .fontWeight(.bold)
-                            .frame(width: 34, height: 34)
-                            .background(Color.blue)
-                            .clipShape(Circle())
-                    }
-                    .buttonStyle(.plain)
-                    .padding(.trailing, 8)
-                }
-                .frame(height: 50)
-                .background(Color(.systemGray6))
-                .clipShape(Capsule())
+                .padding(.bottom, 20)
                 
                 Text("DATE & TIME")
                     .font(.caption)
@@ -213,20 +170,53 @@ struct InformationView: View {
 
                         let weekday = weekdayFormatter.string(from: now)
 
-                        let command = "?D \(dateString)\(weekday)" 
+                        let command = "?D \(dateString)\(weekday)"
 
                         bluetoothManager.sendDateTime(command)
                     }
                     .buttonStyle(.bordered)
                 }
-                .padding()
-                .frame(maxWidth: .infinity, alignment: .leading)
+                // picker command send
+                HStack(spacing: 8) {
+                    Picker("Select command...", selection: $selectedCommand) {
+                        Text("Select command...")
+                            .tag(Command?.none)
+                        
+                        Text("Serial Number")
+                            .tag(Command?.some(.serialNumber))
+                        
+                        Text("Calibration")
+                            .tag(Command?.some(.calibrationDate))
+                    }
+                    .pickerStyle(.menu)
+                    
+                    Button {
+                        if let selectedCommand {
+                            bluetoothManager.send(message: selectedCommand.rawValue)
+                            self.selectedCommand = nil
+                        }
+                    } label: {
+                        Image(systemName: "arrow.up")
+                            .font(.subheadline)
+                            .fontWeight(.bold)
+                            .frame(width: 34, height: 34)
+                            .background(Color.blue)
+                            .clipShape(Circle())
+                    }
+                    .buttonStyle(.plain)
+                    .padding(.trailing, 8)
+                }
+                .frame(height: 50)
                 .background(Color(.systemGray6))
-                .cornerRadius(12)
-                
+                .clipShape(Capsule())
+                .padding(.top, 50)
+                .padding(.bottom, 20)
+                .frame(maxWidth: .infinity) 
             }
-            .padding()
+            .padding(.horizontal, 32)
         }
+        .navigationTitle("Information")
+        .navigationBarTitleDisplayMode(.inline)
     }
 }
 
